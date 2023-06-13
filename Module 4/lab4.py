@@ -153,7 +153,7 @@ PlotPolly(p1, x, y, "Highway MPG")
 # We can perform a polynomial transform on multiple features. First, we import the module:
 from sklearn.preprocessing import PolynomialFeatures
 
-We create a PolynomialFeatures object of degree 2:
+# We create a PolynomialFeatures object of degree 2:
 pr=PolynomialFeatures(degree=2)
 pr
 
