@@ -106,6 +106,8 @@ lre.score(x_test[['horsepower']], y_test)
 lre.score(x_train[['horsepower']], y_train)
 
 # Find the R^2 on the test data using 40% of the dataset for testing.
+x_train1, x_test1, y_train1, y_test1 = train_test_split(x_data, y_data, test_size=0.40, random_state=0)
+lre=LinearRegression()
 lre.fit(x_train1[["horsepower"]],y_train1)
 lre.score(x_train1[["horsepower"]], y_test1)
 
@@ -161,6 +163,186 @@ DistributionPlot(y_train, yhat_train, "Actual Values (Train)", "Predicted Values
 Title='Distribution  Plot of  Predicted Value Using Test Data vs Data Distribution of Test Data'
 DistributionPlot(y_test,yhat_test,"Actual Values (Test)","Predicted Values (Test)",Title)
 
-#  Let's see if polynomial regression also exhibits a drop in the prediction accuracy when analysing the test dataset
+# Let's see if polynomial regression also exhibits a drop in the prediction accuracy when analysing the test dataset
 from sklearn.preprocessing import PolynomialFeatures
+
+# Let's use 55 percent of the data for training and the rest for testing
+x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.45, random_state=0)
+
+# We will perform a degree 5 polynomial transformation on the feature 'horsepower'.
+pr = PolynomialFeatures(degree=5)
+x_train_pr = pr.fit_transform(x_train[['horsepower']])
+x_test_pr = pr.fit_transform(x_test[['horsepower']])
+print(pr)
+
+# Now, let's create a Linear Regression model "poly" and train it.
+poly = LinearRegression()
+poly.fit(x_train_pr, y_train)
+
+# We can see the output of our model using the method "predict." We assign the values to "yhat".
+yhat = poly.predict(x_test_pr)
+yhat[0:5]
+
+# Let's take the first five predicted values and compare it to the actual targets.
+print("Predicted values:", yhat[0:4])
+print("True values:", y_test[0:4].values)
+
+# We will use the function "PollyPlot" that we defined at the beginning of the lab to display the training data, 
+# testing data, and the predicted function.
+PollyPlot(x_train[['horsepower']], x_test[['horsepower']], y_train, y_test, poly,pr)
+
+# R^2 of the training data:
+poly.score(x_train_pr, y_train)
+
+# R^2 of the test data:
+poly.score(x_test_pr, y_test)
+
+# Let's see how the R^2 changes on the test data for different order polynomials and then plot the results:
+Rsqu_test = []
+
+order = [1, 2, 3, 4]
+for n in order:
+    pr = PolynomialFeatures(degree=n)
+    
+    x_train_pr = pr.fit_transform(x_train[['horsepower']])
+    
+    x_test_pr = pr.fit_transform(x_test[['horsepower']])    
+    
+    lr.fit(x_train_pr, y_train)
+    
+    Rsqu_test.append(lr.score(x_test_pr, y_test))
+
+plt.plot(order, Rsqu_test)
+plt.xlabel('order')
+plt.ylabel('R^2')
+plt.title('R^2 Using Test Data')
+plt.text(3, 0.75, 'Maximum R^2 ')
+
+# The following function will be used in the next section
+def f(order, test_data):
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=test_data, random_state=0)
+    pr = PolynomialFeatures(degree=order)
+    x_train_pr = pr.fit_transform(x_train[['horsepower']])
+    x_test_pr = pr.fit_transform(x_test[['horsepower']])
+    poly = LinearRegression()
+    poly.fit(x_train_pr,y_train)
+    PollyPlot(x_train[['horsepower']], x_test[['horsepower']], y_train,y_test, poly, pr)
+
+# The following interface allows you to experiment with different polynomial orders and different amounts of data.
+interact(f, order=(0, 6, 1), test_data=(0.05, 0.95, 0.05))
+
+# Question #4a): We can perform polynomial transformations with more than one feature. 
+# Create a "PolynomialFeatures" object "pr1" of degree two.
+x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.45, random_state=0)
+pr1 = PolynomialFeatures(degree=2)
+
+# Transform the training and testing samples for the features 'horsepower', 'curb-weight', 'engine-size' and 'highway-mpg'. 
+# Hint: use the method "fit_transform".
+x_train_pr1 = pr1.fit_transform(x_train[["horsepower", "curb-weight", "engine-size", "highway-mpg"]])
+x_test_pr1 = pr1.fit_transform(x_test[["horsepower", "curb-weight", "engine-size", "highway-mpg"]])
+
+# How many dimensions does the new feature have? Hint: use the attribute "shape".
+print(x_train_pr1.shape)
+
+# Create a linear regression model "poly1". Train the object using the method "fit" using the polynomial features.
+poly1 = LinearRegression().fit(x_train_pr1, y_train)
+
+# Use the method "predict" to predict an output on the polynomial features, then use the function "DistributionPlot" 
+# to display the distribution of the predicted test output vs. the actual test data.
+yhat_test1=poly1.predict(x_test_pr1)
+
+Title='Distribution  Plot of  Predicted Value Using Test Data vs Data Distribution of Test Data'
+
+DistributionPlot(y_test, yhat_test1, "Actual Values (Test)", "Predicted Values (Test)", Title)
+
+# Using the distribution plot above, describe (in words) the two regions where 
+# the predicted prices are less accurate than the actual prices.
+print("Predicted values:",yhat[0:4])
+print("True values:",y_test[0:4].values)
+
+# Let's perform a degree two polynomial transformation on our data.
+pr=PolynomialFeatures(degree=2)
+x_train_pr=pr.fit_transform(x_train[['horsepower', 'curb-weight', 'engine-size', 'highway-mpg','normalized-losses','symboling']])
+x_test_pr=pr.fit_transform(x_test[['horsepower', 'curb-weight', 'engine-size', 'highway-mpg','normalized-losses','symboling']])
+
+# Let's import Ridge from the module linear models.
+from sklearn.linear_model import Ridge
+
+# Let's create a Ridge regression object, setting the regularization parameter (alpha) to 0.1
+RigeModel=Ridge(alpha=1)
+
+# Like regular regression, you can fit the model using the method fit.
+RigeModel.fit(x_train_pr, y_train)
+
+# Similarly, you can obtain a prediction:
+yhat = RigeModel.predict(x_test_pr)
+
+# Let's compare the first five predicted samples to our test set:
+print('predicted:', yhat[0:4])
+print('test set :', y_test[0:4].values)
+
+# We select the value of alpha that minimizes the test error. 
+# To do so, we can use a for loop. We have also created a progress 
+# bar to see how many iterations we have completed so far.
+from tqdm import tqdm
+
+Rsqu_test = []
+Rsqu_train = []
+dummy1 = []
+Alpha = 10 * np.array(range(0,1000))
+pbar = tqdm(Alpha)
+
+for alpha in pbar:
+    RigeModel = Ridge(alpha=alpha) 
+    RigeModel.fit(x_train_pr, y_train)
+    test_score, train_score = RigeModel.score(x_test_pr, y_test), RigeModel.score(x_train_pr, y_train)
+    
+    pbar.set_postfix({"Test Score": test_score, "Train Score": train_score})
+
+    Rsqu_test.append(test_score)
+    Rsqu_train.append(train_score)
+
+# We can plot out the value of R^2 for different alphas:
+width = 12
+height = 10
+plt.figure(figsize=(width, height))
+
+plt.plot(Alpha,Rsqu_test, label='validation data  ')
+plt.plot(Alpha,Rsqu_train, 'r', label='training Data ')
+plt.xlabel('alpha')
+plt.ylabel('R^2')
+plt.legend()
+
+# Perform Ridge regression. Calculate the R^2 using the polynomial features, use the training data to train the model 
+# and use the test data to test the model. The parameter alpha should be set to 10.
+RigeModel1=Ridge(alpha=10)
+RigeModel1.fit(x_train_pr, y_train)
+RigeModel.score(x_test_pr, y_test)
+
+# Let's import GridSearchCV from the module model_selection.
+from sklearn.model_selection import GridSearchCV
+
+# We create a dictionary of parameter values:
+parameters1= [{'alpha': [0.001,0.1,1, 10, 100, 1000, 10000, 100000, 100000]}]
+
+# Create a Ridge regression object:
+RR=Ridge()
+
+# Create a ridge grid search object:
+Grid1 = GridSearchCV(RR, parameters1,cv=4)
+
+# Fit the model
+Grid1.fit(x_data[['horsepower', 'curb-weight', 'engine-size', 'highway-mpg']], y_data)
+
+# The object finds the best parameter values on the validation data. 
+# We can obtain the estimator with the best parameters and assign it to the variable BestRR as follows:
+BestRR=Grid1.best_estimator_
+
+# We now test our model on the test data:
+BestRR.score(x_test[['horsepower', 'curb-weight', 'engine-size', 'highway-mpg']], y_test)
+
+
+
+
+
 
